@@ -47,18 +47,8 @@ export default function Layout() {
   const SidebarContent = () => (
     <>
       {/* Brand */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, var(--accent), #818cf8)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2">
-              <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>
-            </svg>
-          </div>
-          <div>
-            <div style={{ fontWeight: 700, fontSize: '14px', letterSpacing: '-0.01em' }}>BizData</div>
-            <div style={{ fontSize: '10.5px', color: 'var(--text-muted)' }}>Manager</div>
-          </div>
-        </div>
+      <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--border)', background: '#f4f6fb' }}>
+        <img src="/logo.png" alt="ImExTek Global Ltd" style={{ height: 34, display: 'block' }} />
       </div>
 
       {/* Nav */}
@@ -133,7 +123,7 @@ export default function Layout() {
               <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
           </button>
-          <span style={{ fontWeight: 700 }}>BizData Manager</span>
+          <span style={{ fontWeight: 700 }}>ImEx-Tek Global Ltd</span>
         </div>
 
         <div style={{ padding: '28px 32px', flex: 1 }}>
