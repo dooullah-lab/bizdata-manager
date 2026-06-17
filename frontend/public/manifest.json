@@ -1,0 +1,9 @@
+{
+  "short_name": "BizData",
+  "name": "BizData Manager",
+  "icons": [],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#0b0d14",
+  "background_color": "#0b0d14"
+}
