@@ -60,7 +60,7 @@ const RecordViewModal = ({ record, onClose, onEdit, canEdit }) => {
     { label: 'Title', value: record.title },
     { label: 'Category', value: record.category },
     { label: 'Status', value: <Badge s={record.status} /> },
-    { label: 'Value', value: record.value != null ? `$${Number(record.value).toLocaleString()}` : '—' },
+    { label: 'Value', value: record.value != null ? `₦${Number(record.value).toLocaleString()}` : '—' },
     { label: 'Description', value: record.description || '—' },
     { label: 'Created by', value: record.created_by_name || '—' },
     { label: 'Created at', value: format(new Date(record.created_at), 'MMM d, yyyy HH:mm') },
@@ -161,7 +161,7 @@ const RecordModal = ({ record, onClose, onSaved }) => {
             </div>
           </div>
           <div className="form-group">
-            <label className="form-label">Value ($)</label>
+            <label className="form-label">Value (₦)</label>
             <input className="form-input" type="number" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} placeholder="0.00" />
           </div>
           <div className="form-group">
@@ -307,7 +307,7 @@ export default function RecordsPage() {
                       <td><span style={{ color: 'var(--text-secondary)' }}>{r.category}</span></td>
                       <td><Badge s={r.status} /></td>
                       <td style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '13px' }}>
-                        {r.value != null ? `$${Number(r.value).toLocaleString()}` : '—'}
+                        {r.value != null ? `₦${Number(r.value).toLocaleString()}` : '—'}
                       </td>
                       <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{r.created_by_name || '—'}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{format(new Date(r.created_at), 'MMM d, yyyy')}</td>

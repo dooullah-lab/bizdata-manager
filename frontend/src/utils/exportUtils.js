@@ -1,25 +1,32 @@
 import jsPDF from 'jspdf';
 import { format } from 'date-fns';
+import { LOGO_BASE64 } from './logoBase64';
 
-const formatVal = (v) => (v != null ? `$${Number(v).toLocaleString()}` : '—');
+const formatVal = (v) => (v != null ? `₦${Number(v).toLocaleString()}` : '—');
 const formatDate = (d) => (d ? format(new Date(d), 'MMM d, yyyy HH:mm') : '—');
+
+// Logo is wider than tall (840x240 ≈ 3.5:1) — keep that ratio when drawing
+const LOGO_RATIO = 240 / 840;
+const LOGO_WIDTH = 38; // mm
+const LOGO_HEIGHT = LOGO_WIDTH * LOGO_RATIO;
 
 // ── Single record → PDF ─────────────────────────────────────────────────
 export const exportRecordToPDF = (record) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
-  let y = 20;
+  let y = 18;
 
-  doc.setFontSize(16);
-  doc.setFont(undefined, 'bold');
-  doc.text('ImEx-Tek Global Ltd', 14, y);
+  try {
+    doc.addImage(LOGO_BASE64, 'PNG', 14, y - 6, LOGO_WIDTH, LOGO_HEIGHT);
+  } catch (e) { /* logo failed to load, continue without it */ }
+
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
   doc.setTextColor(120);
-  doc.text('Business Record Detail', 14, y + 6);
+  doc.text('Business Record Detail', 14, y + LOGO_HEIGHT + 4);
   doc.setTextColor(0);
   doc.setDrawColor(220);
-  y += 12;
+  y += LOGO_HEIGHT + 10;
   doc.line(14, y, pageWidth - 14, y);
   y += 10;
 
@@ -61,15 +68,15 @@ export const exportRecordsListToPDF = (records) => {
   let y = 20;
 
   const drawHeader = () => {
-    doc.setFontSize(16);
-    doc.setFont(undefined, 'bold');
-    doc.text('ImEx-Tek Global Ltd', 14, y);
+    try {
+      doc.addImage(LOGO_BASE64, 'PNG', 14, y - 6, LOGO_WIDTH, LOGO_HEIGHT);
+    } catch (e) { /* logo failed to load, continue without it */ }
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(120);
-    doc.text(`Business Records Export — ${records.length} record(s)`, 14, y + 6);
+    doc.text(`Business Records Export — ${records.length} record(s)`, 14, y + LOGO_HEIGHT + 4);
     doc.setTextColor(0);
-    y += 14;
+    y += LOGO_HEIGHT + 12;
   };
 
   drawHeader();
@@ -126,7 +133,7 @@ const csvEscape = (val) => {
 };
 
 export const exportRecordsToCSV = (records, filenamePrefix = 'business-records') => {
-  const headers = ['Title', 'Category', 'Status', 'Value', 'Description', 'Created By', 'Created At', 'Updated At', 'Record ID'];
+  const headers = ['Title', 'Category', 'Status', 'Value (NGN)', 'Description', 'Created By', 'Created At', 'Updated At', 'Record ID'];
   const rows = records.map((r) => [
     r.title, r.category, r.status, r.value ?? '', r.description ?? '',
     r.created_by_name ?? '', formatDate(r.created_at), formatDate(r.updated_at), r.id,

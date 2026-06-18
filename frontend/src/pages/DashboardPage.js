@@ -68,7 +68,7 @@ export default function DashboardPage() {
         <div className="stat-card">
           <div className="stat-label">Total Value</div>
           <div className="stat-value" style={{ fontSize: '22px' }}>
-            {stats?.totalValue != null ? `$${Number(stats.totalValue).toLocaleString()}` : '—'}
+            {stats?.totalValue != null ? `₦${Number(stats.totalValue).toLocaleString()}` : '—'}
           </div>
           <div className="stat-sub">Active records</div>
         </div>
