@@ -61,6 +61,11 @@ export default function DashboardPage() {
           <div className="stat-sub">Awaiting action</div>
         </div>
         <div className="stat-card">
+          <div className="stat-label">Archived</div>
+          <div className="stat-value" style={{ color: 'var(--text-secondary)' }}>{stats?.archived ?? '—'}</div>
+          <div className="stat-sub">Archived records</div>
+        </div>
+        <div className="stat-card">
           <div className="stat-label">Total Value</div>
           <div className="stat-value" style={{ fontSize: '22px' }}>
             {stats?.totalValue != null ? `$${Number(stats.totalValue).toLocaleString()}` : '—'}

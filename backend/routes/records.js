@@ -28,14 +28,17 @@ router.get('/', async (req, res) => {
       `SELECT COUNT(*) as total FROM business_records r ${whereClause}`, params
     );
 
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 20, 100));
+    const safeOffset = Math.max(0, parseInt(offset) || 0);
+
     const [rows] = await pool.execute(
       `SELECT r.*, u.name as created_by_name
        FROM business_records r
        LEFT JOIN users u ON r.created_by = u.id
        ${whereClause}
        ORDER BY r.created_at DESC
-       LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), offset]
+       LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      params
     );
 
     res.json({

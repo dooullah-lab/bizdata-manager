@@ -22,10 +22,13 @@ router.get('/', async (req, res) => {
       `SELECT COUNT(*) as total FROM audit_logs ${whereClause}`, params
     );
 
+    const safeLimit = Math.max(1, Math.min(parseInt(limit) || 50, 200));
+    const safeOffset = Math.max(0, parseInt(offset) || 0);
+
     const [logs] = await pool.execute(
       `SELECT * FROM audit_logs ${whereClause}
-       ORDER BY created_at DESC LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), offset]
+       ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+      params
     );
 
     res.json({ logs, pagination: { total, page: parseInt(page), limit: parseInt(limit), pages: Math.ceil(total / parseInt(limit)) } });
