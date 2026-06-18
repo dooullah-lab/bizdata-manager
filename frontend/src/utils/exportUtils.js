@@ -20,6 +20,12 @@ export const exportRecordToPDF = (record) => {
     doc.addImage(LOGO_BASE64, 'PNG', 14, y - 6, LOGO_WIDTH, LOGO_HEIGHT);
   } catch (e) { /* logo failed to load, continue without it */ }
 
+  doc.setFontSize(15);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(20, 35, 60);
+  doc.text('ImEx-Tek Global Ltd', 14 + LOGO_WIDTH + 6, y + 2);
+  doc.setTextColor(0);
+
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
   doc.setTextColor(120);
@@ -71,6 +77,13 @@ export const exportRecordsListToPDF = (records) => {
     try {
       doc.addImage(LOGO_BASE64, 'PNG', 14, y - 6, LOGO_WIDTH, LOGO_HEIGHT);
     } catch (e) { /* logo failed to load, continue without it */ }
+
+    doc.setFontSize(15);
+    doc.setFont(undefined, 'bold');
+    doc.setTextColor(20, 35, 60);
+    doc.text('ImEx-Tek Global Ltd', 14 + LOGO_WIDTH + 6, y + 2);
+    doc.setTextColor(0);
+
     doc.setFontSize(10);
     doc.setFont(undefined, 'normal');
     doc.setTextColor(120);
