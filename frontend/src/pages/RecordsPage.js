@@ -1,13 +1,104 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { format } from 'date-fns';
+import { exportRecordToPDF, exportRecordsListToPDF, exportRecordsToCSV } from '../utils/exportUtils';
 
 const CATEGORIES = ['Finance','Operations','HR','Sales','Marketing','Legal','IT','Procurement','Other'];
 const STATUSES   = ['active','pending','archived'];
 
 const Badge = ({ s }) => <span className={`badge badge-${s}`}>{s}</span>;
+
+// Small reusable dropdown for export options
+const ExportDropdown = ({ onPDF, onCSV, label = 'Export', disabled }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ position: 'relative' }}>
+      <button className="btn btn-secondary" disabled={disabled} onClick={() => setOpen(o => !o)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        {label}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginLeft: 2 }}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open && (
+        <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, background: 'var(--bg-raised)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-md)', minWidth: 160, zIndex: 50, overflow: 'hidden' }}>
+          <button
+            onClick={() => { onPDF(); setOpen(false); }}
+            style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Download as PDF
+          </button>
+          <button
+            onClick={() => { onCSV(); setOpen(false); }}
+            style={{ width: '100%', textAlign: 'left', padding: '10px 14px', background: 'none', border: 'none', color: 'var(--text-primary)', fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'none'}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Download as CSV
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// View-only detail modal
+const RecordViewModal = ({ record, onClose, onEdit, canEdit }) => {
+  const fields = [
+    { label: 'Title', value: record.title },
+    { label: 'Category', value: record.category },
+    { label: 'Status', value: <Badge s={record.status} /> },
+    { label: 'Value', value: record.value != null ? `$${Number(record.value).toLocaleString()}` : '—' },
+    { label: 'Description', value: record.description || '—' },
+    { label: 'Created by', value: record.created_by_name || '—' },
+    { label: 'Created at', value: format(new Date(record.created_at), 'MMM d, yyyy HH:mm') },
+    { label: 'Updated at', value: record.updated_at ? format(new Date(record.updated_at), 'MMM d, yyyy HH:mm') : '—' },
+  ];
+
+  return (
+    <div className="modal-overlay" onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="modal">
+        <div className="modal-header">
+          <h3>Record Details</h3>
+          <button className="btn-icon" onClick={onClose}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div className="modal-body">
+          {fields.map(f => (
+            <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', paddingBottom: '12px', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ color: 'var(--text-secondary)', fontSize: '13px', flexShrink: 0 }}>{f.label}</span>
+              <span style={{ fontSize: '13px', fontWeight: 500, textAlign: 'right' }}>{f.value}</span>
+            </div>
+          ))}
+        </div>
+        <div className="modal-footer" style={{ justifyContent: 'space-between' }}>
+          <ExportDropdown
+            label="Download"
+            onPDF={() => exportRecordToPDF(record)}
+            onCSV={() => exportRecordsToCSV([record], record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase())}
+          />
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button className="btn btn-secondary" onClick={onClose}>Close</button>
+            {canEdit && <button className="btn btn-primary" onClick={() => { onClose(); onEdit(record); }}>Edit</button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const RecordModal = ({ record, onClose, onSaved }) => {
   const [form, setForm] = useState({
@@ -95,7 +186,8 @@ export default function RecordsPage() {
   const [pagination, setPagination] = useState({});
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ search: '', category: '', status: '', page: 1 });
-  const [modal, setModal] = useState(null); // null | {} | record
+  const [modal, setModal] = useState(null); // null | {} | record (edit/create)
+  const [viewModal, setViewModal] = useState(null); // record being viewed
   const [deleting, setDeleting] = useState(null);
 
   const fetchRecords = useCallback(async () => {
@@ -140,12 +232,20 @@ export default function RecordsPage() {
           <h1 className="page-title">Business Records</h1>
           <p className="page-subtitle">Manage and track all your business data</p>
         </div>
-        {isManager && (
-          <button className="btn btn-primary" onClick={() => setModal({})}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            New Record
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <ExportDropdown
+            label="Export all"
+            disabled={records.length === 0}
+            onPDF={() => exportRecordsListToPDF(records)}
+            onCSV={() => exportRecordsToCSV(records)}
+          />
+          {isManager && (
+            <button className="btn btn-primary" onClick={() => setModal({})}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Record
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
@@ -199,7 +299,7 @@ export default function RecordsPage() {
                 </thead>
                 <tbody>
                   {records.map(r => (
-                    <tr key={r.id}>
+                    <tr key={r.id} onClick={() => setViewModal(r)} style={{ cursor: 'pointer' }}>
                       <td>
                         <div style={{ fontWeight: 500 }}>{r.title}</div>
                         {r.description && <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px', maxWidth: '280px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.description}</div>}
@@ -212,7 +312,7 @@ export default function RecordsPage() {
                       <td style={{ color: 'var(--text-secondary)', fontSize: '13px' }}>{r.created_by_name || '—'}</td>
                       <td style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{format(new Date(r.created_at), 'MMM d, yyyy')}</td>
                       {isManager && (
-                        <td style={{ textAlign: 'right' }}>
+                        <td style={{ textAlign: 'right' }} onClick={e => e.stopPropagation()}>
                           <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
                             <button className="btn-icon" title="Edit" onClick={() => setModal(r)}>
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -249,6 +349,15 @@ export default function RecordsPage() {
           record={modal}
           onClose={() => setModal(null)}
           onSaved={() => { setModal(null); fetchRecords(); }}
+        />
+      )}
+
+      {viewModal !== null && (
+        <RecordViewModal
+          record={viewModal}
+          onClose={() => setViewModal(null)}
+          onEdit={(r) => setModal(r)}
+          canEdit={isManager}
         />
       )}
     </div>
